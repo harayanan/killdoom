@@ -10,7 +10,7 @@ Kill your doomscrolling. AI-curated daily digests from Reddit and Twitter — 10
 
 - **Framework**: Next.js 16.1.4 (App Router), React 19.2.3, TypeScript 5
 - **Styling**: Tailwind CSS 4, Lucide icons, custom shadcn-style components
-- **Database**: Supabase (PostgreSQL) — 6 tables
+- **Database**: Supabase (PostgreSQL, local instance) — 6 tables
 - **AI**: Google Gemini 2.0 Flash via @google/generative-ai (with retry logic)
 - **Data Sources**: Reddit API (OAuth2), RSS feeds (rss-parser)
 - **Deployment**: Vercel with daily cron job at 6 AM UTC

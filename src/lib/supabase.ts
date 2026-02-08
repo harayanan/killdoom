@@ -1,10 +1,10 @@
-import { localDb } from './local-db';
+import { createClient } from '@supabase/supabase-js';
 
-// Local JSON file database (swap back to Supabase when ready)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function getSupabase(): any {
-  return localDb;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+export function getSupabase() {
+  return supabase;
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const supabase: any = localDb;
