@@ -32,7 +32,7 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'global',
   ARRAY['Android', 'iphone', 'mobiledev'],
   ARRAY['https://9to5google.com/feed/', 'https://9to5mac.com/feed/'],
-  ARRAY[],
+  ARRAY[]::TEXT[],
   ARRAY['ios', 'android', 'mobile'],
   3
 ),
@@ -43,8 +43,8 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'india',
   ARRAY['developersIndia', 'india', 'IndianTech'],
   ARRAY['https://inc42.com/feed/'],
-  ARRAY[],
-  ARRAY[],
+  ARRAY[]::TEXT[],
+  ARRAY[]::TEXT[],
   4
 ),
 (
@@ -54,7 +54,7 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'us',
   ARRAY['technology', 'SiliconValleyHBO'],
   ARRAY['https://www.theverge.com/rss/index.xml', 'https://techcrunch.com/feed/'],
-  ARRAY[],
+  ARRAY[]::TEXT[],
   ARRAY['startup', 'silicon-valley'],
   5
 );
@@ -68,8 +68,8 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'global',
   ARRAY['worldnews', 'geopolitics', 'InternationalNews'],
   ARRAY['https://feeds.bbci.co.uk/news/world/rss.xml', 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml'],
-  ARRAY[],
-  ARRAY[],
+  ARRAY[]::TEXT[],
+  ARRAY[]::TEXT[],
   1
 ),
 (
@@ -79,8 +79,8 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'india',
   ARRAY['india', 'IndiaSpeaks', 'indianews'],
   ARRAY['https://timesofindia.indiatimes.com/rssfeedstopstories.cms'],
-  ARRAY[],
-  ARRAY[],
+  ARRAY[]::TEXT[],
+  ARRAY[]::TEXT[],
   2
 ),
 (
@@ -90,8 +90,8 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'us',
   ARRAY['politics', 'PoliticalDiscussion', 'neutralnews'],
   ARRAY['https://rss.nytimes.com/services/xml/rss/nyt/Politics.xml'],
-  ARRAY[],
-  ARRAY[],
+  ARRAY[]::TEXT[],
+  ARRAY[]::TEXT[],
   3
 );
 
@@ -104,7 +104,7 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'global',
   ARRAY['stocks', 'investing', 'StockMarket'],
   ARRAY['https://feeds.bloomberg.com/markets/news.rss'],
-  ARRAY[],
+  ARRAY[]::TEXT[],
   ARRAY['stocks', 'markets'],
   1
 ),
@@ -115,7 +115,7 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'global',
   ARRAY['CryptoCurrency', 'ethereum', 'Bitcoin'],
   ARRAY['https://www.coindesk.com/arc/outboundfeeds/rss/'],
-  ARRAY[],
+  ARRAY[]::TEXT[],
   ARRAY['crypto', 'bitcoin', 'ethereum'],
   2
 ),
@@ -125,9 +125,9 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'Indian stock market, mutual funds, and personal finance',
   'india',
   ARRAY['IndiaInvestments', 'IndianStreetBets'],
-  ARRAY[],
+  ARRAY[]::TEXT[],
   ARRAY['https://freefincal.com/feed/'],
-  ARRAY[],
+  ARRAY[]::TEXT[],
   3
 ),
 (
@@ -136,9 +136,9 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'Budgeting, savings, retirement, and financial planning',
   'global',
   ARRAY['personalfinance', 'financialindependence'],
-  ARRAY[],
+  ARRAY[]::TEXT[],
   ARRAY['https://www.mrmoneymustache.com/feed/'],
-  ARRAY[],
+  ARRAY[]::TEXT[],
   4
 );
 
@@ -151,7 +151,7 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'global',
   ARRAY['space', 'Astronomy', 'SpaceXLounge'],
   ARRAY['https://www.nasa.gov/feed/'],
-  ARRAY[],
+  ARRAY[]::TEXT[],
   ARRAY['space', 'nasa', 'spacex'],
   1
 ),
@@ -162,7 +162,7 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'global',
   ARRAY['Physics', 'math', 'QuantumComputing'],
   ARRAY['https://www.nature.com/nphys.rss'],
-  ARRAY[],
+  ARRAY[]::TEXT[],
   ARRAY['physics', 'quantum'],
   2
 ),
@@ -173,7 +173,7 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'global',
   ARRAY['biology', 'neuroscience', 'genetics'],
   ARRAY['https://www.nature.com/nature.rss'],
-  ARRAY[],
+  ARRAY[]::TEXT[],
   ARRAY['biology', 'genetics', 'neuroscience'],
   3
 );
@@ -186,7 +186,7 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'Frontend, backend, and full-stack web development',
   'global',
   ARRAY['webdev', 'javascript', 'reactjs', 'nextjs'],
-  ARRAY[],
+  ARRAY[]::TEXT[],
   ARRAY['https://dev.to/feed/tag/webdev', 'https://dev.to/feed/tag/javascript'],
   ARRAY['react', 'nextjs', 'typescript', 'javascript'],
   1
@@ -197,7 +197,7 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'Rust, Go, C++, and low-level programming',
   'global',
   ARRAY['rust', 'golang', 'cpp'],
-  ARRAY[],
+  ARRAY[]::TEXT[],
   ARRAY['https://dev.to/feed/tag/rust', 'https://dev.to/feed/tag/go'],
   ARRAY['rust', 'golang', 'systems-programming'],
   2
@@ -208,7 +208,7 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'Developer tools, CI/CD, and workflow automation',
   'global',
   ARRAY['devops', 'programming', 'commandline'],
-  ARRAY[],
+  ARRAY[]::TEXT[],
   ARRAY['https://dev.to/feed/tag/devops'],
   ARRAY['devops', 'ci-cd', 'docker'],
   3
@@ -223,8 +223,8 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'global',
   ARRAY['Cricket', 'CricketShitpost'],
   ARRAY['https://feeds.bbci.co.uk/sport/cricket/rss.xml'],
-  ARRAY[],
-  ARRAY[],
+  ARRAY[]::TEXT[],
+  ARRAY[]::TEXT[],
   1
 ),
 (
@@ -234,8 +234,8 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'global',
   ARRAY['soccer', 'PremierLeague'],
   ARRAY['https://feeds.bbci.co.uk/sport/football/rss.xml'],
-  ARRAY[],
-  ARRAY[],
+  ARRAY[]::TEXT[],
+  ARRAY[]::TEXT[],
   2
 ),
 (
@@ -245,8 +245,8 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'us',
   ARRAY['nba', 'basketball'],
   ARRAY['https://www.espn.com/espn/rss/nba/news'],
-  ARRAY[],
-  ARRAY[],
+  ARRAY[]::TEXT[],
+  ARRAY[]::TEXT[],
   3
 ),
 (
@@ -255,9 +255,9 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'F1 races, teams, drivers, and technical analysis',
   'global',
   ARRAY['formula1', 'F1Technical'],
-  ARRAY[],
-  ARRAY[],
-  ARRAY[],
+  ARRAY[]::TEXT[],
+  ARRAY[]::TEXT[],
+  ARRAY[]::TEXT[],
   4
 );
 
@@ -270,8 +270,8 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'global',
   ARRAY['movies', 'television', 'MovieDetails'],
   ARRAY['https://www.ign.com/articles.rss'],
-  ARRAY[],
-  ARRAY[],
+  ARRAY[]::TEXT[],
+  ARRAY[]::TEXT[],
   1
 ),
 (
@@ -281,7 +281,7 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'global',
   ARRAY['gaming', 'Games', 'pcgaming'],
   ARRAY['https://kotaku.com/rss'],
-  ARRAY[],
+  ARRAY[]::TEXT[],
   ARRAY['gaming'],
   2
 ),
@@ -291,9 +291,9 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'New releases, concerts, and music industry news',
   'global',
   ARRAY['Music', 'hiphopheads', 'indieheads'],
-  ARRAY[],
-  ARRAY[],
-  ARRAY[],
+  ARRAY[]::TEXT[],
+  ARRAY[]::TEXT[],
+  ARRAY[]::TEXT[],
   3
 );
 
@@ -305,9 +305,9 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'Workout routines, strength training, and physical fitness',
   'global',
   ARRAY['Fitness', 'bodyweightfitness', 'running'],
-  ARRAY[],
-  ARRAY[],
-  ARRAY[],
+  ARRAY[]::TEXT[],
+  ARRAY[]::TEXT[],
+  ARRAY[]::TEXT[],
   1
 ),
 (
@@ -316,9 +316,9 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'Diet science, meal planning, and nutritional research',
   'global',
   ARRAY['nutrition', 'EatCheapAndHealthy'],
-  ARRAY[],
-  ARRAY[],
-  ARRAY[],
+  ARRAY[]::TEXT[],
+  ARRAY[]::TEXT[],
+  ARRAY[]::TEXT[],
   2
 ),
 (
@@ -328,7 +328,7 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'global',
   ARRAY['mentalhealth', 'meditation', 'Anxiety'],
   ARRAY['https://www.who.int/rss-feeds/news-english.xml'],
-  ARRAY[],
+  ARRAY[]::TEXT[],
   ARRAY['mental-health'],
   3
 ),
@@ -339,7 +339,7 @@ INSERT INTO subtopics (topic_id, name, slug, description, region, subreddits, rs
   'global',
   ARRAY['health', 'medicine'],
   ARRAY['https://rss.nytimes.com/services/xml/rss/nyt/Health.xml'],
-  ARRAY[],
-  ARRAY[],
+  ARRAY[]::TEXT[],
+  ARRAY[]::TEXT[],
   4
 );
