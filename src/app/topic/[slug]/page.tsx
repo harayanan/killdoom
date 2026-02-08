@@ -95,7 +95,7 @@ export default async function TopicPage({
       .select('post_id')
       .in('post_id', postIds);
 
-    bookmarkedIds = (bookmarks || []).map((b) => b.post_id);
+    bookmarkedIds = (bookmarks || []).map((b: Record<string, unknown>) => b.post_id as string);
   }
 
   return (

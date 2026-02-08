@@ -16,7 +16,6 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { getSupabase } from '@/lib/supabase';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Cpu,
@@ -49,12 +48,9 @@ export default function TopicsPage() {
 
   useEffect(() => {
     async function fetchTopics() {
-      const supabase = getSupabase();
-      const { data } = await supabase
-        .from('topics')
-        .select('*')
-        .order('sort_order');
-      setTopics((data as Topic[]) || []);
+      const res = await fetch('/api/topics');
+      const json = await res.json();
+      setTopics((json.topics as Topic[]) || []);
       setLoading(false);
     }
     fetchTopics();

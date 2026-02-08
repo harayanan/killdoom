@@ -1,24 +1,10 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { localDb } from './local-db';
 
-let _supabase: SupabaseClient | null = null;
-
-export function getSupabase(): SupabaseClient {
-  if (!_supabase) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase environment variables');
-    }
-
-    _supabase = createClient(supabaseUrl, supabaseAnonKey);
-  }
-  return _supabase;
+// Local JSON file database (swap back to Supabase when ready)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getSupabase(): any {
+  return localDb;
 }
 
-// Lazy proxy for convenience imports
-export const supabase = new Proxy({} as SupabaseClient, {
-  get(_target, prop) {
-    return Reflect.get(getSupabase(), prop);
-  },
-});
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const supabase: any = localDb;

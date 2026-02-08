@@ -13,17 +13,17 @@ export default async function DashboardPage() {
     .from('topics')
     .select('*')
     .eq('is_active', true)
-    .order('sort_order');
+    .order('sort_order') as { data: Record<string, unknown>[] | null };
 
   // Fetch today's digests
   const { data: digests } = await supabase
     .from('daily_digests')
     .select('*')
-    .eq('digest_date', today);
+    .eq('digest_date', today) as { data: Record<string, unknown>[] | null };
 
   // Map digests by topic_id
   const digestByTopic = new Map(
-    (digests || []).map((d) => [d.topic_id, d])
+    (digests || []).map((d: Record<string, unknown>) => [d.topic_id, d])
   );
 
   return (
@@ -40,7 +40,7 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      {!topics || topics.length === 0 ? (
+      {!topics || (topics as Record<string, unknown>[]).length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16 text-center">
           <Skull className="mb-4 h-12 w-12 text-muted-foreground" />
           <h2 className="mb-1 text-lg font-medium">No topics configured</h2>
@@ -50,11 +50,11 @@ export default async function DashboardPage() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {topics.map((topic) => (
+          {(topics as Record<string, unknown>[]).map((topic: Record<string, unknown>) => (
             <TopicCard
-              key={topic.id}
-              topic={topic}
-              digest={digestByTopic.get(topic.id) || null}
+              key={topic.id as string}
+              topic={topic as { slug: string; name: string; description: string | null; icon: string | null }}
+              digest={digestByTopic.get(topic.id) as { summary: string; key_takeaways: string[]; post_count: number; digest_date: string } | null}
             />
           ))}
         </div>
