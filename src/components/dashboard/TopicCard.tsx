@@ -9,6 +9,8 @@ import {
   Clapperboard,
   Heart,
   Hash,
+  Newspaper,
+  User,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -37,11 +39,15 @@ interface TopicCardProps {
     key_takeaways: string[];
     post_count: number;
     digest_date: string;
+    news_summary?: string | null;
+    individual_summary?: string | null;
   } | null;
+  postCounts?: { news: number; individual: number } | null;
 }
 
-export function TopicCard({ topic, digest }: TopicCardProps) {
+export function TopicCard({ topic, digest, postCounts }: TopicCardProps) {
   const Icon = (topic.icon && iconMap[topic.icon]) || Hash;
+  const hasSections = digest?.news_summary != null;
 
   return (
     <Link href={`/topic/${topic.slug}`}>
@@ -65,7 +71,7 @@ export function TopicCard({ topic, digest }: TopicCardProps) {
           {digest ? (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground leading-relaxed">
-                {truncate(digest.summary, 200)}
+                {truncate(hasSections ? (digest.news_summary || digest.summary) : digest.summary, 200)}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {digest.key_takeaways.slice(0, 2).map((takeaway, i) => (
@@ -75,7 +81,24 @@ export function TopicCard({ topic, digest }: TopicCardProps) {
                 ))}
               </div>
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>{digest.post_count} posts</span>
+                {postCounts && (postCounts.news > 0 || postCounts.individual > 0) ? (
+                  <span className="flex items-center gap-2">
+                    {postCounts.news > 0 && (
+                      <span className="flex items-center gap-0.5">
+                        <Newspaper className="h-3 w-3" />
+                        {postCounts.news}
+                      </span>
+                    )}
+                    {postCounts.individual > 0 && (
+                      <span className="flex items-center gap-0.5">
+                        <User className="h-3 w-3" />
+                        {postCounts.individual}
+                      </span>
+                    )}
+                  </span>
+                ) : (
+                  <span>{digest.post_count} posts</span>
+                )}
                 <span>{digest.digest_date}</span>
               </div>
             </div>

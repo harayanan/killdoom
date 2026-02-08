@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
-import { fetchPostsForTopic, storePostsInDb } from '@/lib/content-fetcher';
-import { generateDigest } from '@/lib/ai-summarizer';
+import { fetchPostsForTopic, fetchPostsForTopicSplit, storePostsInDb } from '@/lib/content-fetcher';
+import { generateDigest, generateSplitDigest, type SourceFeedbackEntry } from '@/lib/ai-summarizer';
 
 export const maxDuration = 300;
 
@@ -45,71 +45,170 @@ export async function GET(request: Request) {
       try {
         console.log(`Processing topic: ${topic.name}`);
 
-        // Fetch posts from Reddit + RSS
-        const posts = await fetchPostsForTopic(
-          topic.subreddits || [],
-          topic.rss_feeds || [],
-          10
-        );
+        // Fetch active subtopics for this topic
+        const { data: subtopics } = await supabase
+          .from('subtopics')
+          .select('subreddits, rss_feeds_news, rss_feeds_individual, hn_tags')
+          .eq('topic_id', topic.id)
+          .eq('is_active', true);
 
-        if (posts.length === 0) {
-          console.warn(`No posts found for topic: ${topic.name}`);
-          continue;
-        }
+        const hasSubtopics = subtopics && subtopics.length > 0;
 
-        totalPostsFetched += posts.length;
+        if (hasSubtopics) {
+          // ---- Split digest path (with subtopics) ----
+          const splitPosts = await fetchPostsForTopicSplit(subtopics);
+          const allPosts = [...splitPosts.news, ...splitPosts.individual];
 
-        // Store posts in DB
-        const storedPosts = await storePostsInDb(posts);
+          if (allPosts.length === 0) {
+            console.warn(`No posts found for topic: ${topic.name}`);
+            continue;
+          }
 
-        // Generate AI digest
-        const digest = await generateDigest(topic.name, posts);
+          totalPostsFetched += allPosts.length;
 
-        // Store daily digest
-        const { data: digestRow, error: digestError } = await supabase
-          .from('daily_digests')
-          .upsert(
-            {
-              topic_id: topic.id,
-              digest_date: today,
-              summary: digest.overall_summary,
-              key_takeaways: digest.key_takeaways,
-              post_count: storedPosts.length,
-            },
-            { onConflict: 'topic_id,digest_date' }
-          )
-          .select('id')
-          .single();
+          // Store all posts in DB
+          const storedNews = await storePostsInDb(splitPosts.news);
+          const storedIndividual = await storePostsInDb(splitPosts.individual);
 
-        if (digestError || !digestRow) {
-          errors.push(
-            `Failed to store digest for ${topic.name}: ${digestError?.message}`
-          );
-          continue;
-        }
+          // Fetch source feedback for this topic
+          const { data: feedbackRows } = await supabase
+            .from('source_feedback')
+            .select('source_identifier, feedback')
+            .eq('topic_id', topic.id);
 
-        // Store digest-post links with AI summaries
-        for (let i = 0; i < storedPosts.length; i++) {
-          const postSummary = digest.post_summaries.find(
-            (ps) => ps.post_index === i + 1
+          const feedback: SourceFeedbackEntry[] = (feedbackRows || []).map((r: Record<string, unknown>) => ({
+            source_identifier: r.source_identifier as string,
+            feedback: r.feedback as 'like' | 'dislike',
+          }));
+
+          // Generate split AI digest
+          const digest = await generateSplitDigest(
+            topic.name,
+            splitPosts.news,
+            splitPosts.individual,
+            feedback
           );
 
-          await supabase.from('digest_posts').upsert(
-            {
-              digest_id: digestRow.id,
-              post_id: storedPosts[i].id,
-              ai_summary: postSummary?.summary || '',
-              relevance_score: postSummary?.relevance_score || 0,
-              sort_order: i,
-            },
-            { onConflict: 'digest_id,post_id' }
+          // Store daily digest with dual summaries
+          const { data: digestRow, error: digestError } = await supabase
+            .from('daily_digests')
+            .upsert(
+              {
+                topic_id: topic.id,
+                digest_date: today,
+                summary: digest.news_summary || digest.individual_summary || '',
+                key_takeaways: [...(digest.news_takeaways || []), ...(digest.individual_takeaways || [])],
+                post_count: storedNews.length + storedIndividual.length,
+                news_summary: digest.news_summary,
+                individual_summary: digest.individual_summary,
+                news_takeaways: digest.news_takeaways,
+                individual_takeaways: digest.individual_takeaways,
+              },
+              { onConflict: 'topic_id,digest_date' }
+            )
+            .select('id')
+            .single();
+
+          if (digestError || !digestRow) {
+            errors.push(
+              `Failed to store digest for ${topic.name}: ${digestError?.message}`
+            );
+            continue;
+          }
+
+          // Store news digest-post links
+          for (let i = 0; i < storedNews.length; i++) {
+            const postSummary = digest.news_post_summaries.find(
+              (ps) => ps.post_index === i + 1
+            );
+            await supabase.from('digest_posts').upsert(
+              {
+                digest_id: digestRow.id,
+                post_id: storedNews[i].id,
+                ai_summary: postSummary?.summary || '',
+                relevance_score: postSummary?.relevance_score || 0,
+                sort_order: i,
+                section: 'news',
+              },
+              { onConflict: 'digest_id,post_id' }
+            );
+          }
+
+          // Store individual digest-post links
+          for (let i = 0; i < storedIndividual.length; i++) {
+            const postSummary = digest.individual_post_summaries.find(
+              (ps) => ps.post_index === i + 1
+            );
+            await supabase.from('digest_posts').upsert(
+              {
+                digest_id: digestRow.id,
+                post_id: storedIndividual[i].id,
+                ai_summary: postSummary?.summary || '',
+                relevance_score: postSummary?.relevance_score || 0,
+                sort_order: i,
+                section: 'individual',
+              },
+              { onConflict: 'digest_id,post_id' }
+            );
+          }
+        } else {
+          // ---- Legacy path (no subtopics) ----
+          const posts = await fetchPostsForTopic(
+            topic.subreddits || [],
+            topic.rss_feeds || [],
+            10
           );
+
+          if (posts.length === 0) {
+            console.warn(`No posts found for topic: ${topic.name}`);
+            continue;
+          }
+
+          totalPostsFetched += posts.length;
+          const storedPosts = await storePostsInDb(posts);
+          const digest = await generateDigest(topic.name, posts);
+
+          const { data: digestRow, error: digestError } = await supabase
+            .from('daily_digests')
+            .upsert(
+              {
+                topic_id: topic.id,
+                digest_date: today,
+                summary: digest.overall_summary,
+                key_takeaways: digest.key_takeaways,
+                post_count: storedPosts.length,
+              },
+              { onConflict: 'topic_id,digest_date' }
+            )
+            .select('id')
+            .single();
+
+          if (digestError || !digestRow) {
+            errors.push(
+              `Failed to store digest for ${topic.name}: ${digestError?.message}`
+            );
+            continue;
+          }
+
+          for (let i = 0; i < storedPosts.length; i++) {
+            const postSummary = digest.post_summaries.find(
+              (ps) => ps.post_index === i + 1
+            );
+            await supabase.from('digest_posts').upsert(
+              {
+                digest_id: digestRow.id,
+                post_id: storedPosts[i].id,
+                ai_summary: postSummary?.summary || '',
+                relevance_score: postSummary?.relevance_score || 0,
+                sort_order: i,
+              },
+              { onConflict: 'digest_id,post_id' }
+            );
+          }
         }
 
         digestsCreated++;
-        console.log(
-          `Completed digest for ${topic.name}: ${storedPosts.length} posts`
-        );
+        console.log(`Completed digest for ${topic.name}`);
       } catch (topicError) {
         const msg =
           topicError instanceof Error ? topicError.message : String(topicError);
@@ -125,7 +224,7 @@ export async function GET(request: Request) {
       await supabase
         .from('data_metadata')
         .update({
-          status: errors.length > 0 ? 'completed' : 'completed',
+          status: 'completed',
           completed_at: new Date().toISOString(),
           posts_fetched: totalPostsFetched,
           digests_created: digestsCreated,

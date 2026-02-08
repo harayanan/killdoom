@@ -4,6 +4,7 @@ import { ArrowLeft, Skull } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { formatDate } from '@/lib/utils';
+import { RELEVANCE_THRESHOLD } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,12 +34,13 @@ export default async function TopicPage({
     .eq('digest_date', today)
     .single();
 
-  // Fetch digest posts with their linked posts
+  // Fetch digest posts with their linked posts, filtered by relevance
   interface DigestPostRow {
     id: string;
     ai_summary: string;
     relevance_score: number;
     sort_order: number;
+    section: string | null;
     post: {
       id: string;
       source: string;
@@ -49,6 +51,7 @@ export default async function TopicPage({
       score: number;
       num_comments: number;
       published_at: string | null;
+      source_type: string | null;
     };
   }
 
@@ -63,6 +66,7 @@ export default async function TopicPage({
         ai_summary,
         relevance_score,
         sort_order,
+        section,
         post:posts (
           id,
           source,
@@ -72,11 +76,13 @@ export default async function TopicPage({
           subreddit,
           score,
           num_comments,
-          published_at
+          published_at,
+          source_type
         )
       `
       )
       .eq('digest_id', digest.id)
+      .gte('relevance_score', RELEVANCE_THRESHOLD)
       .order('sort_order');
 
     // Supabase returns the FK join as an array type but it's actually a single object.
@@ -85,6 +91,11 @@ export default async function TopicPage({
       (dp) => dp.post !== null
     );
   }
+
+  // Split posts by section
+  const newsPosts = digestPosts.filter((dp) => dp.section === 'news');
+  const individualPosts = digestPosts.filter((dp) => dp.section === 'individual');
+  const hasSections = digest?.news_summary != null;
 
   // Fetch bookmarked post IDs
   const postIds = digestPosts.map((dp) => dp.post.id);
@@ -121,13 +132,21 @@ export default async function TopicPage({
       {digest ? (
         <TopicDigestView
           topicName={topic.name}
+          topicId={topic.id}
           digest={{
             summary: digest.summary,
             key_takeaways: digest.key_takeaways as string[],
             post_count: digest.post_count,
             digest_date: digest.digest_date,
             posts: digestPosts,
+            news_summary: digest.news_summary ?? null,
+            individual_summary: digest.individual_summary ?? null,
+            news_takeaways: (digest.news_takeaways ?? []) as string[],
+            individual_takeaways: (digest.individual_takeaways ?? []) as string[],
+            news_posts: newsPosts,
+            individual_posts: individualPosts,
           }}
+          hasSections={hasSections}
           initialBookmarks={bookmarkedIds}
         />
       ) : (

@@ -32,12 +32,21 @@ export async function generateWithRetry(
 }
 
 export function extractJson<T>(text: string): T {
-  // Try to find JSON array first, then JSON object
-  const arrayMatch = text.match(/\[[\s\S]*\]/);
-  if (arrayMatch) return JSON.parse(arrayMatch[0]);
+  // Strip markdown code fences if present
+  const cleaned = text.replace(/```(?:json)?\s*/g, '').replace(/```\s*/g, '').trim();
 
-  const objectMatch = text.match(/\{[\s\S]*\}/);
-  if (objectMatch) return JSON.parse(objectMatch[0]);
+  // Try object match first (most common for digest responses)
+  const objectMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (objectMatch) {
+    try {
+      return JSON.parse(objectMatch[0]);
+    } catch {
+      // Fall through to array match
+    }
+  }
+
+  const arrayMatch = cleaned.match(/\[[\s\S]*\]/);
+  if (arrayMatch) return JSON.parse(arrayMatch[0]);
 
   throw new Error('Failed to extract JSON from Gemini response');
 }

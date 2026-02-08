@@ -1,4 +1,4 @@
--- Seed pre-defined topics with subreddits and Twitter RSS feeds
+-- Seed pre-defined topics with subreddits and RSS feeds
 
 INSERT INTO topics (name, slug, description, icon, subreddits, rss_feeds, sort_order) VALUES
 (
@@ -7,7 +7,7 @@ INSERT INTO topics (name, slug, description, icon, subreddits, rss_feeds, sort_o
   'Latest in tech, AI breakthroughs, and the future of computing',
   'Cpu',
   ARRAY['technology', 'artificial', 'MachineLearning', 'singularity', 'gadgets'],
-  ARRAY['https://rsshub.app/twitter/user/elaboratequit', 'https://rsshub.app/twitter/user/ylecun'],
+  ARRAY['https://hnrss.org/frontpage?count=10', 'https://www.theverge.com/rss/index.xml'],
   1
 ),
 (
@@ -16,7 +16,7 @@ INSERT INTO topics (name, slug, description, icon, subreddits, rss_feeds, sort_o
   'Global events, politics, and current affairs',
   'Globe',
   ARRAY['worldnews', 'geopolitics', 'news', 'InternationalNews'],
-  ARRAY['https://rsshub.app/twitter/user/Reuters', 'https://rsshub.app/twitter/user/AP'],
+  ARRAY['https://feeds.bbci.co.uk/news/world/rss.xml', 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml'],
   2
 ),
 (
@@ -25,7 +25,7 @@ INSERT INTO topics (name, slug, description, icon, subreddits, rss_feeds, sort_o
   'Stock markets, investing, crypto, and personal finance',
   'TrendingUp',
   ARRAY['investing', 'stocks', 'personalfinance', 'CryptoCurrency', 'IndiaInvestments'],
-  ARRAY['https://rsshub.app/twitter/user/markets', 'https://rsshub.app/twitter/user/unusual_whales'],
+  ARRAY['https://feeds.bloomberg.com/markets/news.rss', 'https://www.coindesk.com/arc/outboundfeeds/rss/'],
   3
 ),
 (
@@ -34,7 +34,7 @@ INSERT INTO topics (name, slug, description, icon, subreddits, rss_feeds, sort_o
   'Scientific discoveries, space exploration, and research breakthroughs',
   'Atom',
   ARRAY['science', 'space', 'Physics', 'biology', 'EverythingScience'],
-  ARRAY['https://rsshub.app/twitter/user/NASAWebb', 'https://rsshub.app/twitter/user/nature'],
+  ARRAY['https://www.nasa.gov/feed/', 'https://www.nature.com/nature.rss'],
   4
 ),
 (
@@ -43,7 +43,7 @@ INSERT INTO topics (name, slug, description, icon, subreddits, rss_feeds, sort_o
   'Software development, programming languages, and dev culture',
   'Code',
   ARRAY['programming', 'webdev', 'javascript', 'rust', 'golang', 'devops'],
-  ARRAY['https://rsshub.app/twitter/user/ThePrimeagen', 'https://rsshub.app/twitter/user/firaborrego'],
+  ARRAY['https://hnrss.org/newest?points=100&count=10', 'https://dev.to/feed'],
   5
 ),
 (
@@ -52,7 +52,7 @@ INSERT INTO topics (name, slug, description, icon, subreddits, rss_feeds, sort_o
   'Sports highlights, scores, and analysis across all major leagues',
   'Trophy',
   ARRAY['sports', 'nba', 'soccer', 'Cricket', 'formula1'],
-  ARRAY['https://rsshub.app/twitter/user/espaborrego', 'https://rsshub.app/twitter/user/SkySports'],
+  ARRAY['https://www.espn.com/espn/rss/news', 'https://feeds.bbci.co.uk/sport/rss.xml'],
   6
 ),
 (
@@ -61,7 +61,7 @@ INSERT INTO topics (name, slug, description, icon, subreddits, rss_feeds, sort_o
   'Movies, TV shows, music, gaming, and pop culture',
   'Clapperboard',
   ARRAY['movies', 'television', 'gaming', 'Music', 'entertainment'],
-  ARRAY['https://rsshub.app/twitter/user/DiscussingFilm', 'https://rsshub.app/twitter/user/IGN'],
+  ARRAY['https://www.ign.com/articles.rss', 'https://kotaku.com/rss'],
   7
 ),
 (
@@ -70,6 +70,6 @@ INSERT INTO topics (name, slug, description, icon, subreddits, rss_feeds, sort_o
   'Fitness, nutrition, mental health, and medical breakthroughs',
   'Heart',
   ARRAY['health', 'Fitness', 'nutrition', 'meditation', 'mentalhealth'],
-  ARRAY['https://rsshub.app/twitter/user/WHO', 'https://rsshub.app/twitter/user/hubaborrego'],
+  ARRAY['https://www.who.int/rss-feeds/news-english.xml', 'https://rss.nytimes.com/services/xml/rss/nyt/Health.xml'],
   8
 );

@@ -1,6 +1,7 @@
 import { getSupabase } from '@/lib/supabase';
 import { TopicCard } from '@/components/dashboard/TopicCard';
 import { Skull } from 'lucide-react';
+import { RELEVANCE_THRESHOLD } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +27,37 @@ export default async function DashboardPage() {
     (digests || []).map((d: Record<string, unknown>) => [d.topic_id, d])
   );
 
+  // Fetch post counts per digest, split by section
+  const digestIds = (digests || []).map((d: Record<string, unknown>) => d.id as string);
+  const postCountsByDigest = new Map<string, { news: number; individual: number }>();
+
+  if (digestIds.length > 0) {
+    const { data: digestPosts } = await supabase
+      .from('digest_posts')
+      .select('digest_id, section, relevance_score')
+      .in('digest_id', digestIds)
+      .gte('relevance_score', RELEVANCE_THRESHOLD);
+
+    for (const dp of (digestPosts || []) as { digest_id: string; section: string | null; relevance_score: number }[]) {
+      const counts = postCountsByDigest.get(dp.digest_id) || { news: 0, individual: 0 };
+      if (dp.section === 'individual') {
+        counts.individual++;
+      } else {
+        counts.news++;
+      }
+      postCountsByDigest.set(dp.digest_id, counts);
+    }
+  }
+
+  // Map post counts by topic_id
+  const postCountsByTopic = new Map<string, { news: number; individual: number }>();
+  for (const d of (digests || [])) {
+    const counts = postCountsByDigest.get(d.id as string);
+    if (counts) {
+      postCountsByTopic.set(d.topic_id as string, counts);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-8">
@@ -36,7 +68,7 @@ export default async function DashboardPage() {
           </h1>
         </div>
         <p className="text-muted-foreground">
-          AI-curated summaries from Reddit and Twitter. No doomscrolling needed.
+          AI-curated summaries from Reddit, Hacker News, and RSS. No doomscrolling needed.
         </p>
       </div>
 
@@ -54,7 +86,8 @@ export default async function DashboardPage() {
             <TopicCard
               key={topic.id as string}
               topic={topic as { slug: string; name: string; description: string | null; icon: string | null }}
-              digest={digestByTopic.get(topic.id) as { summary: string; key_takeaways: string[]; post_count: number; digest_date: string } | null}
+              digest={digestByTopic.get(topic.id) as { summary: string; key_takeaways: string[]; post_count: number; digest_date: string; news_summary?: string | null; individual_summary?: string | null } | null}
+              postCounts={postCountsByTopic.get(topic.id as string) || null}
             />
           ))}
         </div>

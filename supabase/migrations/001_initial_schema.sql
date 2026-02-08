@@ -22,7 +22,7 @@ CREATE INDEX idx_topics_active ON topics (is_active);
 -- Posts: raw fetched posts from Reddit + Twitter/RSS
 CREATE TABLE posts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  source TEXT NOT NULL CHECK (source IN ('reddit', 'twitter')),
+  source TEXT NOT NULL CHECK (source IN ('reddit', 'twitter')), -- 'twitter' also used for general RSS
   external_id TEXT NOT NULL,
   title TEXT NOT NULL,
   body TEXT,

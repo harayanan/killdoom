@@ -5,18 +5,28 @@ interface RedditToken {
 
 let cachedToken: RedditToken | null = null;
 
+function hasOAuthCredentials(): boolean {
+  const clientId = process.env.REDDIT_CLIENT_ID;
+  const clientSecret = process.env.REDDIT_CLIENT_SECRET;
+  const refreshToken = process.env.REDDIT_REFRESH_TOKEN;
+  return !!(
+    clientId &&
+    clientSecret &&
+    refreshToken &&
+    !clientId.startsWith('your-') &&
+    !clientSecret.startsWith('your-') &&
+    !refreshToken.startsWith('your-')
+  );
+}
+
 async function getAccessToken(): Promise<string> {
   if (cachedToken && Date.now() < cachedToken.expires_at - 60_000) {
     return cachedToken.access_token;
   }
 
-  const clientId = process.env.REDDIT_CLIENT_ID;
-  const clientSecret = process.env.REDDIT_CLIENT_SECRET;
-  const refreshToken = process.env.REDDIT_REFRESH_TOKEN;
-
-  if (!clientId || !clientSecret || !refreshToken) {
-    throw new Error('Missing Reddit OAuth2 environment variables');
-  }
+  const clientId = process.env.REDDIT_CLIENT_ID!;
+  const clientSecret = process.env.REDDIT_CLIENT_SECRET!;
+  const refreshToken = process.env.REDDIT_REFRESH_TOKEN!;
 
   const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
 
@@ -60,10 +70,10 @@ export interface RedditPost {
   created_utc: number;
 }
 
-export async function fetchTopPosts(
+async function fetchViaOAuth(
   subreddit: string,
-  timeframe: 'day' | 'week' = 'day',
-  limit = 10
+  timeframe: string,
+  limit: number
 ): Promise<RedditPost[]> {
   const token = await getAccessToken();
 
@@ -78,7 +88,7 @@ export async function fetchTopPosts(
   );
 
   if (!res.ok) {
-    console.error(`Failed to fetch r/${subreddit}: ${res.status}`);
+    console.error(`Failed to fetch r/${subreddit} via OAuth: ${res.status}`);
     return [];
   }
 
@@ -86,6 +96,47 @@ export async function fetchTopPosts(
   return (data.data?.children || []).map(
     (child: { data: RedditPost }) => child.data
   );
+}
+
+async function fetchViaPublicApi(
+  subreddit: string,
+  timeframe: string,
+  limit: number
+): Promise<RedditPost[]> {
+  const res = await fetch(
+    `https://www.reddit.com/r/${subreddit}/top.json?t=${timeframe}&limit=${limit}`,
+    {
+      headers: {
+        'User-Agent': 'KillDoom/0.1.0',
+      },
+    }
+  );
+
+  if (!res.ok) {
+    console.error(`Failed to fetch r/${subreddit} via public API: ${res.status}`);
+    return [];
+  }
+
+  const data = await res.json();
+  return (data.data?.children || []).map(
+    (child: { data: RedditPost }) => child.data
+  );
+}
+
+export async function fetchTopPosts(
+  subreddit: string,
+  timeframe: 'day' | 'week' = 'day',
+  limit = 10
+): Promise<RedditPost[]> {
+  try {
+    if (hasOAuthCredentials()) {
+      return await fetchViaOAuth(subreddit, timeframe, limit);
+    }
+    return await fetchViaPublicApi(subreddit, timeframe, limit);
+  } catch (error) {
+    console.error(`Failed to fetch r/${subreddit}:`, error);
+    return [];
+  }
 }
 
 export async function savePost(postId: string): Promise<boolean> {
