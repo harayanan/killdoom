@@ -27,14 +27,14 @@ export interface SplitPosts {
 
 function redditRssToFetchedPost(post: RssPost, subreddit: string, sourceType: 'news' | 'individual' = 'individual'): FetchedPost {
   // Reddit RSS IDs look like "t3_1qyikta"
-  const externalId = post.id.replace('t3_', '');
+  const externalId = String(post.id || '').replace('t3_', '');
   return {
     source: 'reddit',
     external_id: externalId,
-    title: post.title,
-    body: post.content?.replace(/<[^>]*>/g, '').slice(0, 2000) || '',
-    url: post.url || `https://reddit.com${post.id}`,
-    author: post.author?.replace('/u/', '') || '',
+    title: String(post.title || ''),
+    body: String(post.content || '').replace(/<[^>]*>/g, '').slice(0, 2000),
+    url: String(post.url || '') || `https://reddit.com${post.id}`,
+    author: String(post.author || '').replace('/u/', ''),
     subreddit,
     score: 0, // Not available via RSS
     num_comments: 0,
@@ -48,11 +48,11 @@ function redditRssToFetchedPost(post: RssPost, subreddit: string, sourceType: 'n
 function rssToFetchedPost(post: RssPost, sourceType: 'news' | 'individual' = 'news', feedUrl: string | null = null): FetchedPost {
   return {
     source: 'twitter',
-    external_id: post.id,
-    title: post.title,
-    body: post.content?.slice(0, 2000) || '',
-    url: post.url,
-    author: post.author,
+    external_id: String(post.id || ''),
+    title: String(post.title || ''),
+    body: String(post.content || '').slice(0, 2000),
+    url: String(post.url || ''),
+    author: String(post.author || ''),
     subreddit: null,
     score: 0,
     num_comments: 0,
@@ -66,16 +66,16 @@ function rssToFetchedPost(post: RssPost, sourceType: 'news' | 'individual' = 'ne
 function hnToFetchedPost(hit: HNHit): FetchedPost {
   return {
     source: 'hackernews',
-    external_id: hit.objectID,
-    title: hit.title,
-    body: hit.story_text?.slice(0, 2000) || '',
-    url: hit.url || `https://news.ycombinator.com/item?id=${hit.objectID}`,
-    author: hit.author,
+    external_id: String(hit.objectID || ''),
+    title: String(hit.title || ''),
+    body: String(hit.story_text || '').slice(0, 2000),
+    url: String(hit.url || '') || `https://news.ycombinator.com/item?id=${hit.objectID}`,
+    author: String(hit.author || ''),
     subreddit: null,
-    score: hit.points || 0,
-    num_comments: hit.num_comments || 0,
+    score: Number(hit.points) || 0,
+    num_comments: Number(hit.num_comments) || 0,
     thumbnail_url: null,
-    published_at: hit.created_at || null,
+    published_at: hit.created_at ? String(hit.created_at) : null,
     source_type: 'news',
     feed_url: null,
   };

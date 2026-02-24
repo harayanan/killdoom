@@ -78,7 +78,17 @@ RESEND_API_KEY                — Resend email API key
 NITTER_INSTANCES              — Comma-separated Nitter hosts (optional)
 ```
 
-## What Was Done (2026-02-24 session)
+## What Was Done (2026-02-24 session 2)
+
+- Verified migration 006 already applied (email_subscriptions table + twitter_queries columns live)
+- Verified RESEND_API_KEY configured in .env.local and Vercel production
+- Tested full email flow: cron ran, 7 topics digested, 100 posts fetched, 1 email sent via Resend
+- Tested Nitter: all 3 default instances down (expected), graceful fallback works (returns empty, cron continues)
+- Added defensive String()/Number() coercion in content-fetcher.ts and ai-summarizer.ts to prevent "Cannot convert object to primitive value" errors
+- Replaced dead IGN RSS feed (404) with The Verge Entertainment RSS in database
+- Build passes clean
+
+## What Was Done (2026-02-24 session 1)
 
 - Added Twitter/X as content source via Nitter RSS (`nitter-client.ts`)
 - Added email digest subscription page (`/email-digest`)
@@ -90,15 +100,14 @@ NITTER_INSTANCES              — Comma-separated Nitter hosts (optional)
 - Added "Email Digest" to Header navigation
 - Integrated Nitter into both legacy and split fetch paths in content-fetcher.ts
 - Added `resend` npm dependency
-- Build passes clean
 
 ## Next Steps
 
-- Run migration 006 against local Supabase
-- Add `RESEND_API_KEY` to `.env.local` and Vercel
-- Configure Resend domain (killdoom.com or use onboarding domain)
-- Test full email flow end-to-end
-- Test Nitter instances (they go up/down; graceful fallback is built in)
+- User priority topics: **Tech/AI** and **Investing/Finance**
+- Find working Nitter instances or alternative Twitter data source
+- Add user auth for multi-user support
+- Parallelize topic processing in cron (currently sequential — main perf bottleneck)
+- Add unsubscribe link in email digests
 
 ## Quick Start
 
@@ -109,4 +118,4 @@ npm run dev
 ```
 
 ---
-*Last reviewed: 2026-02-24*
+*Last reviewed: 2026-02-24 (session 2)*

@@ -31,7 +31,7 @@ function formatPostsText(posts: FetchedPost[]): string {
   return posts
     .map(
       (p, i) =>
-        `${i + 1}. [${p.source}${p.subreddit ? ` r/${p.subreddit}` : ''}] ${p.title}${p.score > 0 ? ` (score: ${p.score})` : ''}\n   ${p.body?.slice(0, 500) || 'No body text'}`
+        `${i + 1}. [${String(p.source)}${p.subreddit ? ` r/${String(p.subreddit)}` : ''}] ${String(p.title || 'Untitled')}${Number(p.score) > 0 ? ` (score: ${p.score})` : ''}\n   ${String(p.body || '').slice(0, 500) || 'No body text'}`
     )
     .join('\n\n');
 }
