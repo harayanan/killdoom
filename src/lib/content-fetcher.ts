@@ -1,5 +1,6 @@
 import { fetchRssFeed, fetchMultipleFeeds, type RssPost } from './rss-client';
 import { fetchHNByTags, type HNHit } from './hn-client';
+import { fetchNitterMultipleQueries } from './nitter-client';
 import { getSupabase } from './supabase';
 import { MAX_POSTS_PER_SECTION } from './constants';
 
@@ -86,21 +87,23 @@ function hnToFetchedPost(hit: HNHit): FetchedPost {
 export async function fetchPostsForTopic(
   subreddits: string[],
   rssFeeds: string[],
-  limit = 10
+  limit = 10,
+  twitterQueries: string[] = []
 ): Promise<FetchedPost[]> {
   // Build Reddit RSS URLs from subreddit names
   const redditRssUrls = subreddits.map(
     (sub) => `https://www.reddit.com/r/${sub}/top/.rss?t=day&limit=5`
   );
 
-  // Fetch Reddit via RSS and other RSS feeds in parallel
-  const [redditResults, otherRssResults] = await Promise.all([
+  // Fetch Reddit via RSS, other RSS feeds, and Nitter in parallel
+  const [redditResults, otherRssResults, nitterResults] = await Promise.all([
     Promise.allSettled(redditRssUrls.map((url, i) =>
       fetchRssFeed(url).then((posts) =>
         posts.map((p) => redditRssToFetchedPost(p, subreddits[i]))
       )
     )),
     fetchMultipleFeeds(rssFeeds),
+    fetchNitterMultipleQueries(twitterQueries, 5),
   ]);
 
   const redditPosts = redditResults
@@ -116,7 +119,7 @@ export async function fetchPostsForTopic(
   const seen = new Set<string>();
   const allPosts: FetchedPost[] = [];
 
-  for (const post of [...redditPosts, ...rssPosts]) {
+  for (const post of [...redditPosts, ...rssPosts, ...nitterResults]) {
     const key = `${post.source}:${post.external_id}`;
     if (!seen.has(key)) {
       seen.add(key);
@@ -144,6 +147,7 @@ export async function fetchPostsForTopicSplit(
     rss_feeds_news: string[];
     rss_feeds_individual: string[];
     hn_tags: string[];
+    twitter_queries?: string[];
   }[]
 ): Promise<SplitPosts> {
   // Aggregate all sources from subtopics
@@ -151,26 +155,29 @@ export async function fetchPostsForTopicSplit(
   const allNewsFeedUrls = new Set<string>();
   const allIndividualFeedUrls = new Set<string>();
   const allHnTags = new Set<string>();
+  const allTwitterQueries = new Set<string>();
 
   for (const st of subtopics) {
     st.subreddits.forEach((s) => allSubreddits.add(s));
     st.rss_feeds_news.forEach((f) => allNewsFeedUrls.add(f));
     st.rss_feeds_individual.forEach((f) => allIndividualFeedUrls.add(f));
     st.hn_tags.forEach((t) => allHnTags.add(t));
+    (st.twitter_queries || []).forEach((q) => allTwitterQueries.add(q));
   }
 
   const subreddits = Array.from(allSubreddits);
   const newsFeedUrls = Array.from(allNewsFeedUrls);
   const individualFeedUrls = Array.from(allIndividualFeedUrls);
   const hnTags = Array.from(allHnTags);
+  const twitterQueries = Array.from(allTwitterQueries);
 
   // Build Reddit RSS URLs
   const redditRssUrls = subreddits.map(
     (sub) => `https://www.reddit.com/r/${sub}/top/.rss?t=day&limit=5`
   );
 
-  // Fetch all sources in parallel
-  const [redditResults, newsRssResults, individualRssResults, hnResults] = await Promise.all([
+  // Fetch all sources in parallel (including Nitter)
+  const [redditResults, newsRssResults, individualRssResults, hnResults, nitterResults] = await Promise.all([
     Promise.allSettled(redditRssUrls.map((url, i) =>
       fetchRssFeed(url).then((posts) =>
         posts.map((p) => redditRssToFetchedPost(p, subreddits[i], 'individual'))
@@ -187,6 +194,7 @@ export async function fetchPostsForTopicSplit(
       ).catch(() => [] as FetchedPost[])
     )),
     fetchHNByTags(hnTags, MAX_POSTS_PER_SECTION),
+    fetchNitterMultipleQueries(twitterQueries, 5),
   ]);
 
   const redditPosts = redditResults
@@ -211,8 +219,8 @@ export async function fetchPostsForTopicSplit(
     }
   }
 
-  // Individual sources: Reddit + individual RSS
-  for (const post of [...redditPosts, ...individualPosts]) {
+  // Individual sources: Reddit + individual RSS + Nitter (Twitter)
+  for (const post of [...redditPosts, ...individualPosts, ...nitterResults]) {
     const key = `${post.source}:${post.external_id}`;
     if (!seen.has(key)) {
       seen.add(key);

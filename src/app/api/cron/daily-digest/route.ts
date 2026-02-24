@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
 import { fetchPostsForTopic, fetchPostsForTopicSplit, storePostsInDb } from '@/lib/content-fetcher';
 import { generateDigest, generateSplitDigest, type SourceFeedbackEntry } from '@/lib/ai-summarizer';
+import { sendDigestEmail } from '@/lib/email-client';
+import { renderDigestEmail } from '@/lib/email-template';
 
 export const maxDuration = 300;
 
@@ -48,7 +50,7 @@ export async function GET(request: Request) {
         // Fetch active subtopics for this topic
         const { data: subtopics } = await supabase
           .from('subtopics')
-          .select('subreddits, rss_feeds_news, rss_feeds_individual, hn_tags')
+          .select('subreddits, rss_feeds_news, rss_feeds_individual, hn_tags, twitter_queries')
           .eq('topic_id', topic.id)
           .eq('is_active', true);
 
@@ -156,7 +158,8 @@ export async function GET(request: Request) {
           const posts = await fetchPostsForTopic(
             topic.subreddits || [],
             topic.rss_feeds || [],
-            10
+            10,
+            topic.twitter_queries || []
           );
 
           if (posts.length === 0) {
@@ -217,6 +220,99 @@ export async function GET(request: Request) {
       }
     }
 
+    // ---- Email digest sending ----
+    let emailsSent = 0;
+    try {
+      const { data: subscriptions } = await supabase
+        .from('email_subscriptions')
+        .select('*')
+        .eq('is_active', true);
+
+      if (subscriptions && subscriptions.length > 0) {
+        // Fetch today's digests with topic info for email rendering
+        const { data: todayDigests } = await supabase
+          .from('daily_digests')
+          .select('*, topics(name)')
+          .eq('digest_date', today);
+
+        if (todayDigests && todayDigests.length > 0) {
+          for (const sub of subscriptions) {
+            try {
+              const subscribedTopicIds = new Set(sub.topic_ids || []);
+
+              // Filter digests to subscribed topics
+              const relevantDigests = todayDigests.filter((d: Record<string, unknown>) =>
+                subscribedTopicIds.size === 0 || subscribedTopicIds.has(d.topic_id as string)
+              );
+
+              if (relevantDigests.length === 0) continue;
+
+              // Fetch top posts for each digest
+              const topicDigestsForEmail = await Promise.all(
+                relevantDigests.map(async (d: Record<string, unknown>) => {
+                  const { data: digestPosts } = await supabase
+                    .from('digest_posts')
+                    .select('ai_summary, relevance_score, section, posts(title, url, source, author)')
+                    .eq('digest_id', d.id)
+                    .gte('relevance_score', 0.5)
+                    .order('relevance_score', { ascending: false })
+                    .limit(5);
+
+                  const topicInfo = d.topics as Record<string, unknown> | null;
+
+                  return {
+                    topic: {
+                      name: topicInfo?.name as string || 'Unknown Topic',
+                      news_summary: d.news_summary as string | null,
+                      individual_summary: d.individual_summary as string | null,
+                      summary: d.summary as string | null,
+                      news_takeaways: d.news_takeaways as string[] | null,
+                      individual_takeaways: d.individual_takeaways as string[] | null,
+                      key_takeaways: d.key_takeaways as string[] | null,
+                    },
+                    posts: (digestPosts || []).map((dp: Record<string, unknown>) => {
+                      const post = dp.posts as Record<string, unknown> | null;
+                      return {
+                        title: (post?.title as string) || '',
+                        url: (post?.url as string) || '',
+                        ai_summary: (dp.ai_summary as string) || '',
+                        source: (post?.source as string) || '',
+                        author: (post?.author as string) || '',
+                        relevance_score: (dp.relevance_score as number) || 0,
+                        section: (dp.section as string) || null,
+                      };
+                    }),
+                  };
+                })
+              );
+
+              const html = renderDigestEmail(today, topicDigestsForEmail);
+              const topicCount = topicDigestsForEmail.length;
+              const subject = `KillDoom Digest — ${topicCount} topic${topicCount !== 1 ? 's' : ''} for ${today}`;
+
+              const result = await sendDigestEmail(sub.email, subject, html);
+
+              if (result.success) {
+                emailsSent++;
+                await supabase
+                  .from('email_subscriptions')
+                  .update({ last_sent_at: new Date().toISOString() })
+                  .eq('id', sub.id);
+              } else {
+                errors.push(`Email to ${sub.email}: ${result.error}`);
+              }
+            } catch (emailError) {
+              const msg = emailError instanceof Error ? emailError.message : String(emailError);
+              errors.push(`Email to ${sub.email}: ${msg}`);
+            }
+          }
+        }
+      }
+    } catch (emailStepError) {
+      const msg = emailStepError instanceof Error ? emailStepError.message : String(emailStepError);
+      errors.push(`Email sending step: ${msg}`);
+    }
+
     const duration = Date.now() - startTime;
 
     // Update job metadata
@@ -239,6 +335,7 @@ export async function GET(request: Request) {
       date: today,
       topics_processed: digestsCreated,
       posts_fetched: totalPostsFetched,
+      emails_sent: emailsSent,
       errors: errors.length > 0 ? errors : undefined,
       duration_ms: duration,
     });

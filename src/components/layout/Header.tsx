@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Skull, LayoutDashboard, Hash, Bookmark } from 'lucide-react';
+import { Skull, LayoutDashboard, Hash, Bookmark, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/topics', label: 'Topics', icon: Hash },
+  { href: '/email-digest', label: 'Email Digest', icon: Mail },
 ];
 
 export function Header() {
