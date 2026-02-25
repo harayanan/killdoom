@@ -117,5 +117,13 @@ cp .env.example .env.local
 npm run dev
 ```
 
+## Session: 2026-02-25
+
+### What was done (VPS storage optimization)
+- **Dedicated Supabase instance STOPPED** — the killdoom dedicated instance (port 9100) was stopped to reclaim disk. It had zero tables — migration from shared DB never happened.
+- Compose file preserved at `/root/supabase-stacks/killdoom/docker-compose.yml`. Restart with: `cd /root/supabase-stacks/killdoom && docker compose -p supabase-killdoom up -d`
+- **All killdoom data is safe** in the shared Supabase (port 8000): 9 tables (bookmarks, channels, daily_digests, data_metadata, digest_posts, posts, source_feedback, subtopics, topics)
+- App still points to shared instance — no impact on functionality.
+
 ---
-*Last reviewed: 2026-02-24 (session 2)*
+*Last reviewed: 2026-02-25*
