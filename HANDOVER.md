@@ -125,5 +125,12 @@ npm run dev
 - **All killdoom data is safe** in the shared Supabase (port 8000): 9 tables (bookmarks, channels, daily_digests, data_metadata, digest_posts, posts, source_feedback, subtopics, topics)
 - App still points to shared instance — no impact on functionality.
 
+## Session: 2026-03-01
+
+### What was done (ESLint fixes)
+- Fixed all ESLint errors across 2 files to achieve 0 errors, 0 warnings on `npm run lint`:
+  - `src/components/layout/Header.tsx` — removed unused `Bookmark` import from lucide-react
+  - `src/components/topic/TopicDigestView.tsx` — removed unused `topicName` from destructured props
+
 ---
-*Last reviewed: 2026-02-25*
+*Last reviewed: 2026-03-01*
