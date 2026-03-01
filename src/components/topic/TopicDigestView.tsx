@@ -77,7 +77,6 @@ function getSourceIdentifier(post: DigestPost['post']): { identifier: string; ty
 }
 
 export function TopicDigestView({
-  topicName,
   topicId,
   digest,
   hasSections,

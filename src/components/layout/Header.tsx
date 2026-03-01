@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Skull, LayoutDashboard, Hash, Bookmark, Mail } from 'lucide-react';
+import { Skull, LayoutDashboard, Hash, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
